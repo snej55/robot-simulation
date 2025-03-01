@@ -65,7 +65,7 @@ class App:
 
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.1f}')
             pygame.display.flip()
-            self.clock.tick(1)
+            self.clock.tick(30)
 
 if __name__ == '__main__':
     App().run()

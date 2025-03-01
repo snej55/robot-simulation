@@ -1,7 +1,7 @@
 # class for robot in robot simulation
 import pygame, math
 
-DRAG = 0.1
+DRAG = 0.0
 SPEED = 1
 
 class Robot:
@@ -91,6 +91,8 @@ class Robot:
         motor_direction.rotate_ip(-90)
         motor_angle = math.atan2(motor_direction.y, motor_direction.x) # get the angle
 
+        print(f"1. {right_motor_pos} {left_motor_pos}")
+
         # update left & right motor positions
         motor_left_val = self.motor_left + self.motor_right * DRAG
         left_motor_pos = self.rotate(left_motor_pos, motor_left_val, center_pos)
@@ -102,7 +104,7 @@ class Robot:
         # right_motor_pos.x += math.cos(motor_angle) * motor_right_val
         # right_motor_pos.y += math.sin(motor_angle) * motor_right_val
 
-        print(right_motor_pos, left_motor_pos)
+        print(f"2. {right_motor_pos} {left_motor_pos}")
 
         # constrain motor positions
         dx, dy = right_motor_pos.x - left_motor_pos.x, right_motor_pos.y - left_motor_pos.y
@@ -114,7 +116,7 @@ class Robot:
         left_motor_pos.x -= dx * percent
         left_motor_pos.y -= dy * percent
 
-        print(right_motor_pos, left_motor_pos)
+        print(right_motor_pos, left_motor_pos, self.angle)
 
         # finally, update the robot
         # recalculate direction & center_pos
