@@ -1,5 +1,5 @@
-import pygame, sys, time
-from robot import Robot
+import pygame, sys, time, math
+from scripts.robot import Robot
 
 class App:
     def __init__(self):
@@ -10,6 +10,18 @@ class App:
         self.running = True
 
         self.robot = Robot((50, 50), 0, (10, 20))
+
+        self.scroll = pygame.Vector2(0, 0)
+
+    # draws grid to show positions more clearly
+    def draw_grid(self, size: list, color: tuple):
+        tile_size = size
+        length = math.ceil(self.screen.get_width() / tile_size[0]) + 2
+        height = math.ceil(self.screen.get_height() / tile_size[1]) + 2
+        for x in range(length):
+            pygame.draw.line(self.screen, color, ((x - 1) * tile_size[0] - (self.scroll[0] % tile_size[0]), 0), ((x - 1) * tile_size[0] - (self.scroll[0] % tile_size[0]), self.screen.get_height()))
+        for y in range(height):
+            pygame.draw.line(self.screen, color, (0, (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])), (self.screen.get_width(), (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])))
     
     def close(self):
         self.running = False
@@ -21,6 +33,7 @@ class App:
 
     def draw(self):
         self.screen.fill((255, 255, 255))
+        self.draw_grid([10, 10], (220, 220, 220))
         self.robot.angle += 1 * self.dt
         self.robot.draw(self.screen, (0, 0))
 
