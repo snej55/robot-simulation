@@ -1,6 +1,9 @@
 # class for robot in robot simulation
 import pygame, math
 
+DRAG = 0.1
+SPEED = 1
+
 class Robot:
     def __init__(self, pos: pygame.Vector2, angle: float, dimensions: pygame.Vector2) -> None:
         self.pos = pygame.Vector2(pos)
@@ -17,11 +20,10 @@ class Robot:
     
     def set_left_motor(self, val) -> None:
         # max analog value for motor is 255
-        self.motor_left = max(0, min(val, 255))
+        self.motor_left = max(0, min(val, 255)) * SPEED
 
     def set_right_motor(self, val) -> None:
-        # "" ""
-        self.motor_right = max(0, min(val, 255))
+        self.motor_right = max(0, min(val, 255)) * SPEED
 
     def get_center(self) -> pygame.Vector2:
         rect = pygame.Rect(self.pos, self.dimensions)
@@ -66,7 +68,67 @@ class Robot:
         return rect.collidepoint(collide_point.x, collide_point.y)
     
     def update_motors(self) -> None:
-        pass
+        """
+        Moves the robot.\n
+        1. Calculate motor positions\n
+        2. Update left & right motors\n
+        3. Contrain left & right motor positions using verlet integration\n
+        4. Calculate robot actual position
+        """
+        
+        center_pos = self.get_center()
+        angle = math.radians(self.angle)
+
+        # calculate motor positions & directions
+        # left and right sides of robot
+        left_motor_pos = pygame.Vector2(center_pos.x - math.cos(angle) * (self.dimensions.x / 2), center_pos.y - math.sin(angle) * (self.dimensions.x / 2))
+        right_motor_pos = pygame.Vector2(center_pos.x - math.cos(angle) * -(self.dimensions.x / 2), center_pos.y - math.sin(angle) * -(self.dimensions.x / 2))
+        # vector perpendicular to vector between two motors
+        motor_direction = right_motor_pos - left_motor_pos
+        # normalize
+        motor_direction = motor_direction.normalize()
+        # get perpendicular vector (NOTE: take account for pygame's inverted coordinate system)
+        motor_direction.rotate_ip(-90)
+        motor_angle = math.atan2(motor_direction.y, motor_direction.x) # get the angle
+
+        # update left & right motor positions
+        motor_left_val = self.motor_left + self.motor_right * DRAG
+        left_motor_pos = self.rotate(left_motor_pos, motor_left_val, center_pos)
+        # left_motor_pos.x += math.cos(motor_angle) * motor_left_val
+        # left_motor_pos.y += math.sin(motor_angle) * motor_left_val
+
+        motor_right_val = self.motor_right + self.motor_left * DRAG
+        right_motor_pos = self.rotate(right_motor_pos, motor_right_val, center_pos)
+        # right_motor_pos.x += math.cos(motor_angle) * motor_right_val
+        # right_motor_pos.y += math.sin(motor_angle) * motor_right_val
+
+        print(right_motor_pos, left_motor_pos)
+
+        # constrain motor positions
+        dx, dy = right_motor_pos.x - left_motor_pos.x, right_motor_pos.y - left_motor_pos.y
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+        difference = self.dimensions.x - distance
+        percent = difference / max(0.0000001, distance)
+        right_motor_pos.x += dx * percent
+        right_motor_pos.y += dy * percent
+        left_motor_pos.x -= dx * percent
+        left_motor_pos.y -= dy * percent
+
+        print(right_motor_pos, left_motor_pos)
+
+        # finally, update the robot
+        # recalculate direction & center_pos
+        motor_direction = right_motor_pos - left_motor_pos
+        motor_direction = motor_direction.normalize()
+        motor_direction.rotate_ip(-90)
+        motor_angle = math.atan2(motor_direction.y, motor_direction.x)
+        # update robot angle
+        self.angle = motor_angle
+        # get midpoint
+        center_pos = left_motor_pos + (right_motor_pos - left_motor_pos) / 2
+        # update position
+        self.pos.x = center_pos.x - self.dimensions.x / 2
+        self.pos.y = center_pos.y - self.dimensions.y / 2
 
     def draw(self, screen: pygame.Surface, scroll: pygame.Vector2) -> None:
         scroll = pygame.Vector2(scroll)

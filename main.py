@@ -10,7 +10,7 @@ class App:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.robot = Robot((50, 50), 0, (20, 30))
+        self.robot = Robot((200, 200), 0, (20, 30))
         self.target = Target((random.randint(200, 400), random.randint(200, 400)), random.random() * 360, (10, 10))
 
         self.scroll = pygame.Vector2(0, 0)
@@ -31,7 +31,8 @@ class App:
         sys.exit()
     
     def update(self):
-        pass
+        self.robot.set_left_motor(60)
+        self.robot.update_motors()
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -41,7 +42,6 @@ class App:
         self.target.draw(self.screen, self.scroll)
 
         # robot
-        self.robot.angle += 1 * self.dt
         self.robot.draw(self.screen, self.scroll)
 
         if (self.robot.colliding_point(pygame.Vector2(pygame.mouse.get_pos()))):
@@ -65,7 +65,7 @@ class App:
 
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.1f}')
             pygame.display.flip()
-            self.clock.tick()
+            self.clock.tick(1)
 
 if __name__ == '__main__':
     App().run()
