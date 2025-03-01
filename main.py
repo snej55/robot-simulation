@@ -1,15 +1,17 @@
-import pygame, sys, time, math
+import pygame, sys, time, math, random
 from scripts.robot import Robot
+from scripts.target import Target
 
 class App:
     def __init__(self):
-        self.screen = pygame.display.set_mode((500, 500))
+        self.screen = pygame.display.set_mode((1000, 640))
         self.dt = 1
         self.last_time = time.time() - 1 / 60
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.robot = Robot((50, 50), 0, (10, 20))
+        self.robot = Robot((50, 50), 0, (20, 30))
+        self.target = Target((random.randint(200, 400), random.randint(200, 400)), random.random() * 360, (10, 10))
 
         self.scroll = pygame.Vector2(0, 0)
 
@@ -33,9 +35,14 @@ class App:
 
     def draw(self):
         self.screen.fill((255, 255, 255))
-        self.draw_grid([10, 10], (220, 220, 220))
+        self.draw_grid([20, 20], (220, 220, 220))
+
+        # target
+        self.target.draw(self.screen, self.scroll)
+
+        # robot
         self.robot.angle += 1 * self.dt
-        self.robot.draw(self.screen, (0, 0))
+        self.robot.draw(self.screen, self.scroll)
 
         if (self.robot.colliding_point(pygame.Vector2(pygame.mouse.get_pos()))):
             pygame.draw.rect(self.screen, (255, 0, 0), (self.screen.get_width() - 100, self.screen.get_height() - 100, 100, 100))
