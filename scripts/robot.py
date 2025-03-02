@@ -1,5 +1,6 @@
 # class for robot in robot simulation
 import pygame, math
+from .physics_world import PhysicsManager
 
 # for physics
 import pymunk
@@ -17,16 +18,37 @@ class Robot:
         self.motor_left = 0.0
         self.motor_right = 0.0
 
+        self.shape = None
+        self.controller_body = None
+
+    def init(self, physics_manager: PhysicsManager, show_debug_joints = True):
+        # box shape
+        self.controller_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+        self.controller_body.friction = 0.0
+        self.shape = pymunk.Poly.create_box(self.controller_body, (self.dimensions.x, self.dimensions.y), 0.0)
+        # self.shape = physics_manager.add_box((self.dimensions.x, self.dimensions.y), 1.0, physics_manager.get_pos(self.pos.x, self.pos.y))
+        
+        # controller body
+        # self.controller_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+        # pivot = pymunk.PivotJoint(self.controller_body, self.shape.body, (0, 0), (0, 0))
+        # gear = pymunk.PivotJoint(self.controller_body, self.shape.body, (0, 0), (0, 0))
+        # gear.error_bias = 0 # fully correct joint each step (or attempt to)
+
+        # if show_debug_joints:
+        #     physics_manager.space.add(pivot, gear, self.controller_body)
+        physics_manager.space.add(self.shape.body, self.shape)
+
+
     def stop(self) -> None:
         self.motor_left = 0.0
         self.motor_right = 0.0
     
     def set_left_motor(self, val) -> None:
         # max analog value for motor is 255
-        self.motor_right = max(0, min(val, 255)) * SPEED
+        self.motor_right = max(-255, min(val, 255)) * SPEED
 
     def set_right_motor(self, val) -> None:
-        self.motor_left = max(0, min(val, 255)) * SPEED
+        self.motor_left = max(-255, min(val, 255)) * SPEED
 
     def get_center(self) -> pygame.Vector2:
         rect = pygame.Rect(self.pos, self.dimensions)
@@ -37,6 +59,10 @@ class Robot:
         self.pos.x += ((self.motor_left + self.motor_right) / 2) * math.cos(self.angle + math.pi * 0.5)
         self.pos.y -= ((self.motor_left + self.motor_right) / 2) * math.sin(self.angle + math.pi * 0.5)
         self.angle -= (self.motor_right - self.motor_left) / self.dimensions.x
+
+        self.shape.body.velocity = pymunk.vec2d.Vec2d(self.pos.x + self.dimensions.x / 2 - self.shape.body.position.x,
+                                                       self.pos.y + self.dimensions.y / 2 - self.shape.body.position.y)
+        self.shape.body.angle = -self.angle
 
     @staticmethod
     def rotate(point: pygame.Vector2, angle: float, center: pygame.Vector2) -> pygame.Vector2:

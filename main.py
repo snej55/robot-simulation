@@ -21,6 +21,12 @@ class App:
 
         self.scroll = pygame.Vector2(0, 0)
 
+        # physics
+        self.physics_manager = PhysicsManager(self.screen.get_width(), self.screen.get_height())
+        self.robot.init(self.physics_manager)
+
+        self.physics_manager.add_box((50, 50), 2, self.physics_manager.get_pos(300, 100))
+
     # draws grid to show positions more clearly
     def draw_grid(self, size: list, color: tuple):
         tile_size = size
@@ -37,11 +43,28 @@ class App:
         sys.exit()
     
     def update(self):
-        self.robot.set_left_motor(-60)
-        self.robot.set_right_motor(60)
+        # self.robot.set_left_motor(-60)
+        # self.robot.set_right_motor(60)
+        clicked = False
+        if pygame.key.get_pressed()[pygame.K_w]:
+            self.robot.set_left_motor(60)
+            clicked = True
+        elif pygame.key.get_pressed()[pygame.K_s]:
+            self.robot.set_left_motor(-60)
+            clicked = True
         if pygame.key.get_pressed()[pygame.K_UP]:
+            self.robot.set_right_motor(60)
+            clicked = True
+        elif pygame.key.get_pressed()[pygame.K_DOWN]:
+            self.robot.set_right_motor(-60)
+            clicked = True
+        
+        if not clicked:
             self.robot.stop()
+        
         self.robot.update_motors()
+
+        self.physics_manager.update(1)
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -52,6 +75,8 @@ class App:
 
         # robot
         self.robot.draw(self.screen, self.scroll)
+
+        self.physics_manager.draw(self.screen)
     
     def run(self):
         while self.running:
@@ -71,7 +96,7 @@ class App:
 
             pygame.display.set_caption(f'FPS: {self.clock.get_fps() :.1f}')
             pygame.display.flip()
-            self.clock.tick(30)
+            self.clock.tick(60)
 
 if __name__ == '__main__':
     App().run()
