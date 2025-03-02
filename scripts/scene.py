@@ -1,4 +1,6 @@
-import pygame, time, sys, random, math
+import pygame, random, math
+
+pygame.font.init()
 
 from .robot import Robot
 from .target import Target
@@ -18,6 +20,8 @@ class Scene:
         self.draw_debug_joints = draw_debug_joints # toggles whether pymunk debugging objects should be drawn
         self.paused = False
         self.step = 0
+
+        self.font = pygame.font.Font(pygame.font.match_font("consolas"), 14)
 
         # physics
         self.physics_manager = PhysicsManager(self.screen.get_width(), self.screen.get_height())
@@ -78,13 +82,16 @@ class Scene:
 
         if self.draw_debug_joints:
             self.physics_manager.draw(self.screen)
+        
+        self.screen.blit(self.font.render(f"Step: {self.step}", False, (255, 255, 255), (0, 0, 0)), (0, 0))
     
-    def tick(self) -> pygame.Surface:
+    def tick(self, display=False) -> pygame.Surface | None:
         """
-        Executes one frame. Returns pygame.Surface
+        Executes one frame. Returns pygame.Surface if display is set to True
         """
-        self.draw()
         self.update()
         self.step += 1
 
-        return self.screen
+        if display:
+            self.draw()
+            return self.screen
