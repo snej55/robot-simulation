@@ -1,4 +1,11 @@
-import pygame, sys, time, math, random
+import pygame
+import time
+import sys
+import random
+import math
+
+import pymunk
+
 from scripts.robot import Robot
 from scripts.target import Target
 
@@ -32,6 +39,7 @@ class App:
     
     def update(self):
         self.robot.set_left_motor(60)
+        self.robot.set_right_motor(60)
         self.robot.update_motors()
 
     def draw(self):
