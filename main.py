@@ -24,6 +24,7 @@ class App:
         # physics
         self.physics_manager = PhysicsManager(self.screen.get_width(), self.screen.get_height())
         self.robot.init(self.physics_manager)
+        self.target.init(self.physics_manager)
 
         self.physics_manager.add_box((50, 50), 2, self.physics_manager.get_pos(300, 100))
 
@@ -63,6 +64,7 @@ class App:
             self.robot.stop()
         
         self.robot.update_motors()
+        self.target.update()
 
         self.physics_manager.update(1)
 

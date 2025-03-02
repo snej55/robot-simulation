@@ -21,23 +21,12 @@ class Robot:
         self.shape = None
         self.controller_body = None
 
-    def init(self, physics_manager: PhysicsManager, show_debug_joints = True):
+    def init(self, physics_manager: PhysicsManager):
         # box shape
         self.controller_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
         self.controller_body.friction = 0.0
         self.shape = pymunk.Poly.create_box(self.controller_body, (self.dimensions.x, self.dimensions.y), 0.0)
-        # self.shape = physics_manager.add_box((self.dimensions.x, self.dimensions.y), 1.0, physics_manager.get_pos(self.pos.x, self.pos.y))
-        
-        # controller body
-        # self.controller_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
-        # pivot = pymunk.PivotJoint(self.controller_body, self.shape.body, (0, 0), (0, 0))
-        # gear = pymunk.PivotJoint(self.controller_body, self.shape.body, (0, 0), (0, 0))
-        # gear.error_bias = 0 # fully correct joint each step (or attempt to)
-
-        # if show_debug_joints:
-        #     physics_manager.space.add(pivot, gear, self.controller_body)
         physics_manager.space.add(self.shape.body, self.shape)
-
 
     def stop(self) -> None:
         self.motor_left = 0.0

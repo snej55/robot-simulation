@@ -1,10 +1,29 @@
 import pygame, math
+# for physics
+import pymunk
+from .physics_world import PhysicsManager
 
 class Target:
     def __init__(self, pos: pygame.Vector2, angle: float, dimensions: pygame.Vector2):
         self.pos = pygame.Vector2(pos)
         self.angle = angle
         self.dimensions = pygame.Vector2(dimensions)
+
+        self.shape = None
+
+    def init(self, physics_manager: PhysicsManager):
+        self.shape = physics_manager.add_box((self.dimensions.x, self.dimensions.y), 20, physics_manager.get_pos(self.pos.x, self.pos.y))
+        self.shape.body.velocity_func = Target.damp_velocity
+
+    @staticmethod
+    def damp_velocity(body, gravity, damping, dt):
+        pymunk.Body.update_velocity(body, gravity, damping * 0.5, dt)
+    
+    def update(self):
+        self.shape.body.apply_impulse_at_local_point(0.5 * -self.shape.body.velocity, (0, 0))
+        self.pos.x = self.shape.body.position.x - self.dimensions.x / 2
+        self.pos.y = self.shape.body.position.y - self.dimensions.y / 2
+        self.angle = math.degrees(-self.shape.body.angle)
 
     def get_center(self) -> pygame.Vector2:
         rect = pygame.Rect(self.pos, self.dimensions)
