@@ -6,7 +6,7 @@ from .physics_world import PhysicsManager
 import pymunk
 
 DRAG = 0.0
-SPEED = 0.01
+SPEED = 0.005
 
 class Robot:
     def __init__(self, pos: pygame.Vector2, angle: float, dimensions: pygame.Vector2) -> None:
