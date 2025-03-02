@@ -4,10 +4,9 @@ import sys
 import random
 import math
 
-import pymunk
-
 from scripts.robot import Robot
 from scripts.target import Target
+from scripts.physics_world import PhysicsManager
 
 class App:
     def __init__(self):
@@ -38,8 +37,10 @@ class App:
         sys.exit()
     
     def update(self):
-        self.robot.set_left_motor(60)
+        self.robot.set_left_motor(-60)
         self.robot.set_right_motor(60)
+        if pygame.key.get_pressed()[pygame.K_UP]:
+            self.robot.stop()
         self.robot.update_motors()
 
     def draw(self):
@@ -51,9 +52,6 @@ class App:
 
         # robot
         self.robot.draw(self.screen, self.scroll)
-
-        if (self.robot.colliding_point(pygame.Vector2(pygame.mouse.get_pos()))):
-            pygame.draw.rect(self.screen, (255, 0, 0), (self.screen.get_width() - 100, self.screen.get_height() - 100, 100, 100))
     
     def run(self):
         while self.running:

@@ -1,4 +1,4 @@
-import pygame, pymunk
+import pymunk
 import pymunk.pygame_util
 from pymunk.vec2d import Vec2d
 
@@ -40,18 +40,21 @@ class PhysicsManager:
         shape.friction = 1
     
     @staticmethod
-    def add_box(space, size, mass, pos: Vec2d):
+    def get_pos(x, y):
+        return Vec2d(x, y)
+
+    def add_box(self, size, mass, pos: Vec2d):
         body = pymunk.Body()
-        space.add(body)
+        self.space.add(body)
 
-        body.position = Vec2d(pos)
+        body.position = pos
 
-        shape = pymunk.Poly.create_box(body, (size, size), 0.0)
+        shape = pymunk.Poly.create_box(body, size, 0.0)
         shape.mass = mass
         shape.friction = FRICTION
-        space.add(shape)
+        self.space.add(shape)
 
-        return body
+        return shape
     
     def update(self, time_step):
         # update bodies
