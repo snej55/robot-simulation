@@ -38,11 +38,12 @@ class Robot:
 
     def set_right_motor(self, val) -> None:
         self.motor_left = max(-255, min(val, 255)) * SPEED
+    
+    def get_angle(self) -> float:
+        return self.angle + math.pi * 0.5
 
     def get_center(self) -> pygame.Vector2:
-        rect = pygame.Rect(self.pos, self.dimensions)
-        center_pos = pygame.Vector2(rect.centerx, rect.centery)
-        return center_pos
+        return pygame.Vector2(self.pos.x + self.dimensions.x / 2, self.pos.y + self.dimensions.y / 2)
     
     def update_motors(self):
         self.pos.x += ((self.motor_left + self.motor_right) / 2) * math.cos(self.angle + math.pi * 0.5)

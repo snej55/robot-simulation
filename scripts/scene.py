@@ -1,10 +1,23 @@
 import pygame, random, math
 
+from dataclasses import dataclass
+
 pygame.font.init()
 
 from .robot import Robot
 from .target import Target
 from .physics_world import PhysicsManager
+
+FOV = 80.0
+LOOK_TIME = 1 # 1 second to check the camera
+STEP_RATE = 1/60
+
+# marker info
+@dataclass
+class TargetInfo:
+    distance: float
+    bearing_y: float
+    ID: int
 
 class Scene:
     def __init__(self, num_targets=4, width=1000, height=640, draw_debug_joints=False):
@@ -34,6 +47,8 @@ class Scene:
         for t in range(num_targets):
             self.targets.append(Target((random.randint(100, width - 100), random.randint(100, height - 100)), random.random() * 360, (10, 10)))
             self.targets[t].init(self.physics_manager)
+        
+        self.stall = 1
 
     # draws grid to show positions more clearly
     def draw_grid(self, size: list, color: tuple):
@@ -45,6 +60,37 @@ class Scene:
         for y in range(height):
             pygame.draw.line(self.screen, color, (0, (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])), (self.screen.get_width(), (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])))
     
+    def see(self) -> list[Target]:
+        # self.stall = 0
+
+        angle = self.robot.get_angle()
+        upper_bound = math.radians(angle + FOV / 2)
+        lower_bound = math.radians(angle - FOV / 2)
+
+        targets_found = []
+        for target in self.targets:
+            angle2target = math.atan2(target.pos.y - self.robot.pos.y, target.pos.x - self.robot.pos.x)
+            if lower_bound < angle2target < upper_bound:
+                targets_found.append(target)
+        
+        return targets_found
+
+    def get_ready(self) -> bool:
+        # check if we're done checking sensors
+        return self.stall > 1 / STEP_RATE
+
+    def set_motor_left(self, val) -> None:
+        if self.get_ready():
+            self.robot.set_left_motor(val)
+    
+    def set_motor_right(self, val) -> None:
+        if self.get_ready():
+            self.robot.set_right_motor(val)
+        
+    def stop(self) -> None:
+        if self.get_ready():
+            self.robot.stop()
+
     def update(self):
         # self.robot.set_left_motor(-60)
         # self.robot.set_right_motor(60)
@@ -82,8 +128,27 @@ class Scene:
 
         if self.draw_debug_joints:
             self.physics_manager.draw(self.screen)
+
+        angle = -math.degrees(self.robot.get_angle())
+        upper_bound = math.radians(angle + FOV / 2)
+        lower_bound = math.radians(angle - FOV / 2)
+
+        pygame.draw.line(self.screen, (0, 255, 0), self.robot.get_center(), (self.robot.get_center()[0] + math.cos(upper_bound) * 1000, self.robot.get_center()[1] + math.sin(upper_bound) * 1000))
+        pygame.draw.line(self.screen, (0, 255, 0), self.robot.get_center(), (self.robot.get_center()[0] + math.cos(lower_bound) * 1000, self.robot.get_center()[1] + math.sin(lower_bound) * 1000))
+        
+
+        targets_found = []
+        for target in self.targets:
+            angle2target = math.atan2(target.pos.y - self.robot.pos.y, target.pos.x - self.robot.pos.x)
+            pygame.draw.line(self.screen, (255, 0, 0), self.robot.get_center(), (self.robot.get_center()[0] + math.cos(angle2target) * 1000, self.robot.get_center()[1] + math.sin(angle2target) * 1000))
+            if lower_bound < angle2target < upper_bound:
+                targets_found.append(target)
+                pygame.draw.line(self.screen, (0, 0, 255), self.robot.get_center(), (self.robot.get_center()[0] + math.cos(angle2target) * 1000, self.robot.get_center()[1] + math.sin(angle2target) * 1000))
         
         self.screen.blit(self.font.render(f"Step: {self.step}", False, (255, 255, 255), (0, 0, 0)), (0, 0))
+    
+    def get_closest_target(*targets) -> TargetInfo:
+        pass
     
     def tick(self, display=False) -> pygame.Surface | None:
         """
@@ -91,7 +156,9 @@ class Scene:
         """
         self.update()
         self.step += 1
+        self.stall += STEP_RATE
 
         if display:
             self.draw()
             return self.screen
+        return None

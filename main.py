@@ -7,6 +7,7 @@ from scripts.scene import Scene
 pygame.font.init()
 
 GENERATION_VOLUME = 30
+NUM_TARGETS = 4
 
 class App:
     """
@@ -26,7 +27,7 @@ class App:
         self.scene_num = 0
 
         self.scenes = []
-        self.scene = Scene(width=self.screen.get_width(), height=self.screen.get_height(), num_targets=500)
+        self.scene = Scene(width=self.screen.get_width(), height=self.screen.get_height(), num_targets=NUM_TARGETS)
 
         self.scene_surf = pygame.Surface((0, 0))
 
