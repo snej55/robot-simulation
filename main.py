@@ -6,9 +6,14 @@ from scripts.scene import Scene
 
 pygame.font.init()
 
+GENERATION_VOLUME = 30
+
 class App:
+    """
+    Manager for the scenes
+    """
     def __init__(self):
-        self.screen = pygame.display.set_mode((1000, 640))
+        self.screen = pygame.display.set_mode((640, 640))
         self.dt = 1
         self.last_time = time.time() - 1 / 60
         self.clock = pygame.time.Clock()
@@ -20,7 +25,8 @@ class App:
         self.show_debug_joints = False
         self.scene_num = 0
 
-        self.scene = Scene()
+        self.scenes = []
+        self.scene = Scene(width=self.screen.get_width(), height=self.screen.get_height(), num_targets=500)
 
         self.scene_surf = pygame.Surface((0, 0))
 

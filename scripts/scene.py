@@ -26,13 +26,13 @@ class Scene:
         # physics
         self.physics_manager = PhysicsManager(self.screen.get_width(), self.screen.get_height())
 
-        self.robot = Robot((200, 200), 0, (20, 30))
+        self.robot = Robot((random.random() * 100 + 10, random.random() + 100 + 10), 0, (20, 30))
         self.robot.init(self.physics_manager)
 
         self.targets = []
         self.num_targets = num_targets
         for t in range(num_targets):
-            self.targets.append(Target((random.randint(200, 400), random.randint(200, 400)), random.random() * 360, (10, 10)))
+            self.targets.append(Target((random.randint(100, width - 100), random.randint(100, height - 100)), random.random() * 360, (10, 10)))
             self.targets[t].init(self.physics_manager)
 
     # draws grid to show positions more clearly
