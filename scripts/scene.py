@@ -131,10 +131,12 @@ class Scene:
         if self.draw_debug_joints:
             self.physics_manager.draw(self.screen)
 
-        angle = self.robot.shape.body.angle - math.pi * 0.5
-        upper_bound = (angle + FOV / 2)
-        lower_bound = (angle - FOV / 2)
-
+        angle = ((self.robot.shape.body.angle + math.pi * 0.5) % (math.pi * 2)) - math.pi
+        upper_bound = (angle + FOV / 2) % (math.pi * 2)
+        lower_bound = (angle - FOV / 2) % (math.pi * 2)
+        if upper_bound < lower_bound:
+            lower_bound -= math.pi * 2
+        # print(angle, upper_bound, lower_bound)
         robot_pos = self.robot.get_center()
 
         # debug drawing
@@ -144,8 +146,11 @@ class Scene:
         for target in self.targets:
             # in radians
             angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
-            if lower_bound < angle2target < upper_bound:
+            anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
+            print(f"angle2target: {angle2target}, anglediff: {anglediff}, angle: {angle}")
+            if abs(anglediff) < FOV / 2:
                 pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
+
 
         self.screen.blit(self.font.render(f"Step: {self.step}", False, (255, 255, 255), (0, 0, 0)), (0, 0))
     
