@@ -147,7 +147,6 @@ class Scene:
             # in radians
             angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
             anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
-            print(f"angle2target: {angle2target}, anglediff: {anglediff}, angle: {angle}")
             if abs(anglediff) < FOV / 2:
                 pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
 
