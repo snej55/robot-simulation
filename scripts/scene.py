@@ -36,6 +36,8 @@ class Scene:
         self.paused = False
         self.step = 0
 
+        self.user_input = False
+
         self.font = pygame.font.Font(pygame.font.match_font("consolas"), 14)
 
         # physics
@@ -51,6 +53,9 @@ class Scene:
             self.targets[t].init(self.physics_manager)
         
         self.stall = 1
+    
+    def set_user_input_enabled(self, val: bool):
+        self.user_input = val
 
     # draws grid to show positions more clearly
     def draw_grid(self, size: list, color: tuple):
@@ -63,39 +68,41 @@ class Scene:
             pygame.draw.line(self.screen, color, (0, (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])), (self.screen.get_width(), (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])))
     
     def see(self) -> list[Target]:
-        self.stall = 0
+        if self.get_ready():
+            self.stall = 0
 
-        angle = ((self.robot.shape.body.angle + math.pi * 0.5) % (math.pi * 2)) - math.pi
-        upper_bound = (angle + FOV / 2) % (math.pi * 2)
-        lower_bound = (angle - FOV / 2) % (math.pi * 2)
-        if upper_bound < lower_bound:
-            lower_bound -= math.pi * 2
-        # print(angle, upper_bound, lower_bound)
-        robot_pos = self.robot.get_center()
+            angle = ((self.robot.shape.body.angle + math.pi * 0.5) % (math.pi * 2)) - math.pi
+            upper_bound = (angle + FOV / 2) % (math.pi * 2)
+            lower_bound = (angle - FOV / 2) % (math.pi * 2)
+            if upper_bound < lower_bound:
+                lower_bound -= math.pi * 2
+            # print(angle, upper_bound, lower_bound)
+            robot_pos = self.robot.get_center()
 
-        # debug drawing
-        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(upper_bound) * 1000, robot_pos[1] + math.sin(upper_bound) * 1000))
-        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(lower_bound) * 1000, robot_pos[1] + math.sin(lower_bound) * 1000))
+            # debug drawing
+            pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(upper_bound) * 1000, robot_pos[1] + math.sin(upper_bound) * 1000))
+            pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(lower_bound) * 1000, robot_pos[1] + math.sin(lower_bound) * 1000))
 
-        targets_found: list[TargetInfo] = []
-        for target in self.targets:
-            # in radians
-            angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
-            anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
-            if abs(anglediff) < FOV / 2:
-                target_data = TargetInfo(
-                    distance=math.sqrt((robot_pos[0] - target.pos.x) ** 2 + (robot_pos[1] - target.pos.y) ** 2), # get distance to target with pythagoras
-                    bearing_y = anglediff,
-                    ID = id(target) # doesn't matter as long as it's unique
-                )
-                targets_found.append(target_data)
-                pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
+            targets_found: list[TargetInfo] = []
+            for target in self.targets:
+                # in radians
+                angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
+                anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
+                if abs(anglediff) < FOV / 2:
+                    target_data = TargetInfo(
+                        distance=math.sqrt((robot_pos[0] - target.pos.x) ** 2 + (robot_pos[1] - target.pos.y) ** 2), # get distance to target with pythagoras
+                        bearing_y = anglediff,
+                        ID = id(target) # doesn't matter as long as it's unique
+                    )
+                    targets_found.append(target_data)
+                    pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
 
-        return targets_found
+            return targets_found
+        return []
 
     def get_ready(self) -> bool:
         # check if we're done checking sensors
-        return self.stall > 1 / STEP_RATE
+        return self.stall > LOOK_TIME / STEP_RATE
 
     def set_motor_left(self, val) -> None:
         if self.get_ready():
@@ -112,21 +119,23 @@ class Scene:
     def update(self):
         # self.robot.set_left_motor(-60)
         # self.robot.set_right_motor(60)
-        speed = 255
-        if pygame.key.get_pressed()[pygame.K_w]:
-            self.robot.set_left_motor(speed)
-        elif pygame.key.get_pressed()[pygame.K_s]:
-            self.robot.set_left_motor(-speed)
-        else:
-            self.robot.set_left_motor(0)
-        if pygame.key.get_pressed()[pygame.K_UP]:
-            self.robot.set_right_motor(speed)
-        elif pygame.key.get_pressed()[pygame.K_DOWN]:
-            self.robot.set_right_motor(-speed)
-        else:
-            self.robot.set_right_motor(0)
+        if self.user_input:
+            speed = 255
+            if pygame.key.get_pressed()[pygame.K_w]:
+                self.robot.set_left_motor(speed)
+            elif pygame.key.get_pressed()[pygame.K_s]:
+                self.robot.set_left_motor(-speed)
+            else:
+                self.robot.set_left_motor(0)
+            if pygame.key.get_pressed()[pygame.K_UP]:
+                self.robot.set_right_motor(speed)
+            elif pygame.key.get_pressed()[pygame.K_DOWN]:
+                self.robot.set_right_motor(-speed)
+            else:
+                self.robot.set_right_motor(0)
         
-        self.robot.update_motors()
+        if self.get_ready():
+            self.robot.update_motors()
         
         for target in self.targets:
             target.update()
@@ -158,7 +167,7 @@ class Scene:
         """
         self.update()
         self.step += 1
-        self.stall += STEP_RATE
+        self.stall += 1
 
         if display:
             self.draw()

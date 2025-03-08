@@ -31,7 +31,7 @@ class Robot:
     def stop(self) -> None:
         self.motor_left = 0.0
         self.motor_right = 0.0
-    
+
     def set_left_motor(self, val) -> None:
         # max analog value for motor is 255
         self.motor_right = max(-255, min(val, 255)) * SPEED

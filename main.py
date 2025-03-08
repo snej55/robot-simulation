@@ -67,6 +67,8 @@ class App:
                         self.scene_num -= 1
                     if event.key == pygame.K_e:
                         self.show_debug_joints = not self.show_debug_joints
+                    if event.key == pygame.K_f:
+                        self.scene.see()
 
             self.draw()
             self.update()
