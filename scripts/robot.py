@@ -41,7 +41,7 @@ class Robot:
     
     def get_angle(self) -> float:
         return self.angle + math.pi * 0.5
-
+    
     def get_center(self) -> pygame.Vector2:
         return pygame.Vector2(self.pos.x + self.dimensions.x / 2, self.pos.y + self.dimensions.y / 2)
     

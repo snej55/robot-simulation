@@ -63,18 +63,34 @@ class Scene:
             pygame.draw.line(self.screen, color, (0, (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])), (self.screen.get_width(), (y - 1) * tile_size[1] - (self.scroll[1] % tile_size[1])))
     
     def see(self) -> list[Target]:
-        # self.stall = 0
+        self.stall = 0
 
-        angle = self.robot.get_angle()
-        upper_bound = math.radians(angle + FOV / 2)
-        lower_bound = math.radians(angle - FOV / 2)
+        angle = ((self.robot.shape.body.angle + math.pi * 0.5) % (math.pi * 2)) - math.pi
+        upper_bound = (angle + FOV / 2) % (math.pi * 2)
+        lower_bound = (angle - FOV / 2) % (math.pi * 2)
+        if upper_bound < lower_bound:
+            lower_bound -= math.pi * 2
+        # print(angle, upper_bound, lower_bound)
+        robot_pos = self.robot.get_center()
 
-        targets_found = []
+        # debug drawing
+        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(upper_bound) * 1000, robot_pos[1] + math.sin(upper_bound) * 1000))
+        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(lower_bound) * 1000, robot_pos[1] + math.sin(lower_bound) * 1000))
+
+        targets_found: list[TargetInfo] = []
         for target in self.targets:
-            angle2target = math.atan2(target.pos.y - self.robot.pos.y, target.pos.x - self.robot.pos.x)
-            if lower_bound < angle2target < upper_bound:
-                targets_found.append(target)
-        
+            # in radians
+            angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
+            anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
+            if abs(anglediff) < FOV / 2:
+                target_data = TargetInfo(
+                    distance=math.sqrt((robot_pos[0] - target.pos.x) ** 2 + (robot_pos[1] - target.pos.y) ** 2), # get distance to target with pythagoras
+                    bearing_y = anglediff,
+                    ID = id(target) # doesn't matter as long as it's unique
+                )
+                targets_found.append(target_data)
+                pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
+
         return targets_found
 
     def get_ready(self) -> bool:
@@ -130,26 +146,6 @@ class Scene:
 
         if self.draw_debug_joints:
             self.physics_manager.draw(self.screen)
-
-        angle = ((self.robot.shape.body.angle + math.pi * 0.5) % (math.pi * 2)) - math.pi
-        upper_bound = (angle + FOV / 2) % (math.pi * 2)
-        lower_bound = (angle - FOV / 2) % (math.pi * 2)
-        if upper_bound < lower_bound:
-            lower_bound -= math.pi * 2
-        # print(angle, upper_bound, lower_bound)
-        robot_pos = self.robot.get_center()
-
-        # debug drawing
-        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(upper_bound) * 1000, robot_pos[1] + math.sin(upper_bound) * 1000))
-        pygame.draw.line(self.screen, (0, 255, 0), robot_pos, (robot_pos[0] + math.cos(lower_bound) * 1000, robot_pos[1] + math.sin(lower_bound) * 1000))
-
-        for target in self.targets:
-            # in radians
-            angle2target = math.atan2(target.pos.y - robot_pos[1], target.pos.x - robot_pos[0])
-            anglediff = ((angle2target - angle + math.pi) % (math.pi * 2)) - math.pi
-            if abs(anglediff) < FOV / 2:
-                pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
-
 
         self.screen.blit(self.font.render(f"Step: {self.step}", False, (255, 255, 255), (0, 0, 0)), (0, 0))
     
