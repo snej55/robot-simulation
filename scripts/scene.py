@@ -100,6 +100,13 @@ class Scene:
             return targets_found
         return []
 
+    def get_closest_target(self, targets = list[TargetInfo] | None) -> TargetInfo:
+        if targets:
+            targets.sort(key=lambda x: x.distance)
+        else:
+            targets = self.see()
+            return self.get_closest_target(targets)
+
     def get_ready(self) -> bool:
         # check if we're done checking sensors
         return self.stall > LOOK_TIME / STEP_RATE
