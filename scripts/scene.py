@@ -100,12 +100,26 @@ class Scene:
             return targets_found
         return []
 
-    def get_closest_target(self, targets = list[TargetInfo] | None) -> TargetInfo:
-        if targets:
-            targets.sort(key=lambda x: x.distance)
+    def get_closest_target(self) -> TargetInfo:
+        targets = self.see()
+        if len(targets):
+            return targets[0]
         else:
-            targets = self.see()
-            return self.get_closest_target(targets)
+            return TargetInfo(
+                distance=random.random() * 10000,
+                bearing_y=random.random() * 10000,
+                ID = id(23)
+            )
+    
+    def get_net_inputs(self) -> tuple:
+        closest_target = self.get_closest_target()
+        return (
+            closest_target.bearing_y,
+            closest_target.distance,
+            self.robot.motor_left,
+            self.robot.motor_right,
+            self.robot.angle,
+        )
 
     def get_ready(self) -> bool:
         # check if we're done checking sensors
@@ -165,13 +179,17 @@ class Scene:
 
         self.screen.blit(self.font.render(f"Step: {self.step}", False, (255, 255, 255), (0, 0, 0)), (0, 0))
     
-    def get_closest_target(*targets) -> TargetInfo:
-        pass
-    
-    def tick(self, display=False) -> pygame.Surface | None:
+    def tick(self, output=None, display=False) -> pygame.Surface | None:
         """
         Executes one frame. Returns pygame.Surface if display is set to True
         """
+        # output: (
+        #   motor_left,
+        #   motor_right,
+        # )
+        if output:
+            self.set_motor_left(output[0])
+            self.set_motor_right(output[1])
         self.update()
         self.step += 1
         self.stall += 1
