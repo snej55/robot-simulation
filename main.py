@@ -6,7 +6,6 @@ from scripts.scene import Scene
 
 pygame.font.init()
 
-GENERATION_VOLUME = 30
 NUM_TARGETS = 1
 
 class App:
