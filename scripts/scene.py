@@ -53,6 +53,7 @@ class Scene:
             self.targets[t].init(self.physics_manager)
         
         self.stall = 1
+        self.seen_targets = []
     
     def set_user_input_enabled(self, val: bool):
         self.user_input = val
@@ -96,30 +97,41 @@ class Scene:
                     )
                     targets_found.append(target_data)
                     pygame.draw.line(self.screen, (0, 255, 255), robot_pos, (robot_pos[0] + math.cos(angle2target) * 1000, robot_pos[1] + math.sin(angle2target) * 1000))
-
+            self.seen_targets = targets_found
             return targets_found
         return []
 
     def get_closest_target(self) -> TargetInfo:
-        targets = self.see()
+        targets = self.seen_targets
         if len(targets):
             return targets[0]
         else:
-            return TargetInfo(
-                distance=random.random() * 10000,
-                bearing_y=random.random() * 10000,
-                ID = id(23)
-            )
+            return None
     
     def get_net_inputs(self) -> tuple:
         closest_target = self.get_closest_target()
-        return (
-            closest_target.bearing_y,
-            closest_target.distance,
-            self.robot.motor_left,
-            self.robot.motor_right,
-            self.robot.angle,
-        )
+        if not closest_target:
+            return (
+                random.random() * 1000, # junk values
+                random.random() * 1000, # trash
+                self.robot.motor_left,
+                self.robot.motor_right,
+                self.robot.angle,
+                int(self.get_ready()),
+                self.stall,
+                False,
+            )
+        else:
+            return (
+                closest_target.bearing_y,
+                closest_target.distance,
+                self.robot.motor_left,
+                self.robot.motor_right,
+                self.robot.angle,
+                int(self.get_ready()),
+                self.stall,
+                True,
+            )
 
     def get_ready(self) -> bool:
         # check if we're done checking sensors
@@ -190,6 +202,8 @@ class Scene:
         if output:
             self.set_motor_left(output[0])
             self.set_motor_right(output[1])
+            if output[2] >= 0.5:
+                self.see()
         self.update()
         self.step += 1
         self.stall += 1
